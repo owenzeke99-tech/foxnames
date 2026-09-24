@@ -1,0 +1,238 @@
+-- Tạo giao diện Key System (Fox Name Modern English UI + Auto Save 24h)
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- File cấu hình lưu key
+local SAVE_FILE_NAME = "FoxName_KeyCache.json"
+local CORRECT_KEY = "FoxNameKeyGPSHsow - Hsjskwoeoirieidikepapl"
+local LINK_GET_KEY = "https://link4m.net/VlM6B"
+
+-- Hàm kiểm tra thời gian lưu key (24 giờ = 86400 giây)
+local function checkSavedKey()
+    if readfile and writefile and isfile and isfile(SAVE_FILE_NAME) then
+        local success, data = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(readfile(SAVE_FILE_NAME))
+        end)
+        if success and data and data.key == CORRECT_KEY then
+            local currentTime = os.time()
+            -- Kiểm tra xem đã qua 24 giờ (86400 giây) chưa
+            if (currentTime - data.time) < 86400 then
+                return true -- Key vẫn còn hạn
+            end
+        end
+    end
+    return false
+end
+
+-- Hàm lưu key kèm thời gian hiện tại
+local function saveKey()
+    if writefile then
+        local data = {
+            key = CORRECT_KEY,
+            time = os.time()
+        }
+        pcall(function()
+            writefile(SAVE_FILE_NAME, game:GetService("HttpService"):JSONEncode(data))
+        end)
+    end
+end
+
+-- Nếu key đã được lưu và còn hạn trong 24h thì chạy thẳng script gốc, không bật menu
+if checkSavedKey() then
+    local success, err = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/caomod2077/Script/refs/heads/main/Fn-stealanegg.lua"))()
+    end)
+    if not success then
+        warn("Error running script: " .. tostring(err))
+    end
+    return -- Dừng code, không tạo GUI nữa
+end
+
+-- Xóa GUI cũ nếu có
+if CoreGui:FindFirstChild("FoxNameKeySystem") then
+    CoreGui.FoxNameKeySystem:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FoxNameKeySystem"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Khung chính dạng trong suốt hiện đại (Glassmorphism)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 480, 0, 270)
+MainFrame.Position = UDim2.new(0.5, -240, 0.5, -135)
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+MainFrame.BackgroundTransparency = 0.2
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+-- Bo góc mượt mà
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 22)
+UICorner.Parent = MainFrame
+
+-- Viền Neon xanh dương sang trọng
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(0, 150, 255)
+UIStroke.Thickness = 1.5
+UIStroke.Transparency = 0.4
+UIStroke.Parent = MainFrame
+
+-- Tiêu đề Fox Name
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Position = UDim2.new(0, 0, 0, 15)
+Title.BackgroundTransparency = 1
+Title.Text = "⚡ FOX NAME SYSTEM ⚡"
+Title.TextColor3 = Color3.fromRGB(0, 180, 255)
+Title.TextSize = 24
+Title.Font = Enum.Font.GothamBlack
+Title.Parent = MainFrame
+
+-- Subtitle phụ bằng tiếng Anh (Không chứa chữ 24h)
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(1, 0, 0, 20)
+SubTitle.Position = UDim2.new(0, 0, 0, 55)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = "Secure Authentication System - Please enter your key"
+SubTitle.TextColor3 = Color3.fromRGB(150, 150, 175)
+SubTitle.TextSize = 12
+SubTitle.Font = Enum.Font.GothamMedium
+SubTitle.Parent = MainFrame
+
+-- Ô nhập mật khẩu (TextBox)
+local TextBox = Instance.new("TextBox")
+TextBox.Size = UDim2.new(0.88, 0, 0, 50)
+TextBox.Position = UDim2.new(0.06, 0, 0, 95)
+TextBox.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+TextBox.BackgroundTransparency = 0.3
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.PlaceholderText = "Enter your key here..."
+TextBox.PlaceholderColor3 = Color3.fromRGB(110, 110, 135)
+TextBox.Text = ""
+TextBox.TextSize = 14
+TextBox.Font = Enum.Font.GothamMedium
+TextBox.Parent = MainFrame
+
+local BoxCorner = Instance.new("UICorner")
+BoxCorner.CornerRadius = UDim.new(0, 14)
+BoxCorner.Parent = TextBox
+
+local BoxStroke = Instance.new("UIStroke")
+BoxStroke.Color = Color3.fromRGB(50, 50, 75)
+BoxStroke.Thickness = 1.2
+BoxStroke.Parent = TextBox
+
+-- Container chứa 2 nút cạnh nhau
+local ButtonContainer = Instance.new("Frame")
+ButtonContainer.Size = UDim2.new(0.88, 0, 0, 48)
+ButtonContainer.Position = UDim2.new(0.06, 0, 0, 160)
+ButtonContainer.BackgroundTransparency = 1
+ButtonContainer.Parent = MainFrame
+
+-- Nút Get Key
+local GetKeyBtn = Instance.new("TextButton")
+GetKeyBtn.Size = UDim2.new(0.48, 0, 1, 0)
+GetKeyBtn.Position = UDim2.new(0, 0, 0, 0)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+GetKeyBtn.BackgroundTransparency = 0.2
+GetKeyBtn.TextColor3 = Color3.fromRGB(0, 180, 255)
+GetKeyBtn.Text = "GET KEY"
+GetKeyBtn.TextSize = 14
+GetKeyBtn.Font = Enum.Font.GothamBold
+GetKeyBtn.Parent = ButtonContainer
+
+local GetKeyCorner = Instance.new("UICorner")
+GetKeyCorner.CornerRadius = UDim.new(0, 14)
+GetKeyCorner.Parent = GetKeyBtn
+
+local GetKeyStroke = Instance.new("UIStroke")
+GetKeyStroke.Color = Color3.fromRGB(0, 150, 255)
+GetKeyStroke.Thickness = 1
+GetKeyStroke.Transparency = 0.5
+GetKeyStroke.Parent = GetKeyBtn
+
+-- Nút Check Key
+local SubmitBtn = Instance.new("TextButton")
+SubmitBtn.Size = UDim2.new(0.48, 0, 1, 0)
+SubmitBtn.Position = UDim2.new(0.52, 0, 0, 0)
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 130, 255)
+SubmitBtn.BackgroundTransparency = 0.1
+SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitBtn.Text = "CHECK KEY"
+SubmitBtn.TextSize = 14
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.Parent = ButtonContainer
+
+local SubmitCorner = Instance.new("UICorner")
+SubmitCorner.CornerRadius = UDim.new(0, 14)
+SubmitCorner.Parent = SubmitBtn
+
+-- Thông báo trạng thái (Status Label)
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, 0, 0, 22)
+StatusLabel.Position = UDim2.new(0, 0, 0, 225)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = ""
+StatusLabel.TextColor3 = Color3.fromRGB(255, 75, 75)
+StatusLabel.TextSize = 13
+StatusLabel.Font = Enum.Font.GothamMedium
+StatusLabel.Parent = MainFrame
+
+-- Hàm tạo hiệu ứng Lắc (Shake Animation) mượt mà khi sai key
+local function shakeMenu()
+    local originalPos = UDim2.new(0.5, -240, 0.5, -135)
+    local intensity = 10
+    
+    for i = 1, 4 do
+        TweenService:Create(MainFrame, TweenInfo.new(0.04), {Position = originalPos + UDim2.new(0, intensity, 0, 0)}):Play()
+        task.wait(0.04)
+        TweenService:Create(MainFrame, TweenInfo.new(0.04), {Position = originalPos + UDim2.new(0, -intensity, 0, 0)}):Play()
+        task.wait(0.04)
+        intensity = intensity * 0.6
+    end
+    TweenService:Create(MainFrame, TweenInfo.new(0.05), {Position = originalPos}):Play()
+end
+
+-- Sự kiện Get Key
+GetKeyBtn.MouseButton1Click:Connect(function()
+    setclipboard(LINK_GET_KEY)
+    StatusLabel.TextColor3 = Color3.fromRGB(0, 180, 255)
+    StatusLabel.Text = "Link copied to clipboard!"
+end)
+
+-- Sự kiện Check Key
+SubmitBtn.MouseButton1Click:Connect(function()
+    if TextBox.Text == CORRECT_KEY then
+        StatusLabel.TextColor3 = Color3.fromRGB(50, 255, 130)
+        StatusLabel.Text = "Success! Loading script..."
+        
+        -- Lưu lại key vào bộ nhớ (hiệu lực 24h)
+        saveKey()
+        
+        TweenService:Create(MainFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        task.wait(0.4)
+        ScreenGui:Destroy()
+        
+        -- Chạy script gốc
+        local success, err = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/caomod2077/Script/refs/heads/main/Fn-stealanegg.lua"))()
+        end)
+        
+        if not success then
+            warn("Error running script: " .. tostring(err))
+        end
+    else
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 75, 75)
+        StatusLabel.Text = "Incorrect key! Please try again."
+        
+        -- Tự động xóa nội dung trong ô nhập khi sai key
+        TextBox.Text = ""
+        
+        -- Kích hoạt hiệu ứng lắc
+        shakeMenu()
+    end
+end)
